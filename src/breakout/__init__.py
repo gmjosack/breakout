@@ -5,14 +5,13 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Breakout"
 
-MOVEMENT_SPEED = 8
-
 PADDLE_WIDTH = 150
 PADDLE_HEIGHT = 20
 
 
 class Paddle(arcade.SpriteSolidColor):
 
+    DEFAULT_SPEED = 8
 
     def __init__(self,
         center_x, center_y,
@@ -32,6 +31,17 @@ class Paddle(arcade.SpriteSolidColor):
         elif self.right >= SCREEN_WIDTH:
             self.right = SCREEN_WIDTH - 1
 
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.LEFT:
+            self.change_x -= self.DEFAULT_SPEED
+        if key == arcade.key.RIGHT:
+            self.change_x += self.DEFAULT_SPEED
+
+    def on_key_release(self, key, modifiers):
+        if key == arcade.key.LEFT:
+            self.change_x += self.DEFAULT_SPEED
+        if key == arcade.key.RIGHT:
+            self.change_x -= self.DEFAULT_SPEED
 
 
 class Ball(arcade.SpriteCircle):
@@ -40,6 +50,7 @@ class Ball(arcade.SpriteCircle):
         radius=7, color=arcade.color.ANTI_FLASH_WHITE,
     ):
         super().__init__(radius=radius, color=color)
+        self.window = arcade.get_window()
         self.change_x = change_x
         self.change_y = change_y
         self.center_x = center_x
@@ -58,6 +69,10 @@ class Ball(arcade.SpriteCircle):
             self.change_y = -self.change_y
         elif self.top >= SCREEN_HEIGHT:
             self.change_y = -self.change_y
+
+        if self.collides_with_sprite(self.window.paddle):
+            self.change_y = -self.change_y
+
 
 
 class Breakout(arcade.Window):
@@ -79,7 +94,6 @@ class Breakout(arcade.Window):
             change_y = 5,
         )
 
-
     def on_draw(self):
         arcade.start_render()
         self.paddle.draw()
@@ -89,19 +103,13 @@ class Breakout(arcade.Window):
         self.paddle.update()
         self.ball.update()
 
-
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.LEFT:
-            self.paddle.change_x -= MOVEMENT_SPEED
-        if key == arcade.key.RIGHT:
-            self.paddle.change_x += MOVEMENT_SPEED
+        if key == arcade.key.ESCAPE:
+            self.close()
+        self.paddle.on_key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
-        if key == arcade.key.LEFT:
-            self.paddle.change_x += MOVEMENT_SPEED
-        if key == arcade.key.RIGHT:
-            self.paddle.change_x -= MOVEMENT_SPEED
-
+        self.paddle.on_key_release(key, modifiers)
 
 
 def main():
